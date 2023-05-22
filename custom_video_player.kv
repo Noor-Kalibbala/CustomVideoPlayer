@@ -1,0 +1,79 @@
+# Control buttons container.
+<PlayerButtonBox>
+    rows: 1
+    adaptive_height: True
+    padding: "6dp"
+    md_bg_color: 0, 0, 0, .95
+
+
+    ButtonVideoStop:
+        id: btn_stop
+        video: root.parent
+        icon: "stop"
+
+    ButtonVideoPlayPause:
+        id: btn_play_pause
+        video: root.parent
+        icon: "pause" if root.parent.state == "play" else "play"
+
+    MDRelativeLayout:
+        id: progress_container
+
+        ProgressBarVideo:
+            video: root.parent
+            size_hint_y: None
+            height: "4dp"
+            pos_hint: {"center_y": .5}
+            value: root.parent.position if root.parent else 0
+            max: max(root.parent.duration, root.parent.position, 1)
+            on_value: root.parent.set_time()
+
+    MDLabel:
+        id:time
+        text:"0:00"
+        adaptive_width: True
+        text_size: None, None
+        theme_text_color: "Custom"
+        text_color: "white"
+        font_style: "Caption"
+
+    ButtonVideoVolume:
+        id: btn_volume
+        video: root.parent
+        icon: "volume-variant-off" if root.parent.volume == 0 else "volume-high"
+
+    MDRelativeLayout:
+        id: volume_container
+        size_hint_x: None
+        width: root.width * 20/100
+
+        MDSlider:
+            size_hint_y: None
+            height: "4dp"
+            pos_hint: {"center_y": .5}
+            max: 100
+            value: root.parent.volume * 100
+            on_value: root.parent.volume = self.value/100
+            show_off: False
+
+    ButtonVideoFullScreen:
+        id: btn_full_screen
+        video: root.parent
+        icon: "fullscreen" if self.video.full_screen == False else "fullscreen-exit"
+
+
+#Override the default video player rule.
+<-VideoPlayer>
+    container: container
+    cols: 1
+    allow_fullscreen: False
+    full_screen: False
+
+    PlayerContainer:
+        id: container
+        md_bg_color: "black"
+        padding: "12dp"
+    PlayerButtonBox:
+        id: button_box
+        video: root
+
