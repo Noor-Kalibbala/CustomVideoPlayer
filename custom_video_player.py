@@ -281,7 +281,6 @@ class CustomVideoPlayer(VideoPlayer):
             anim.bind(on_complete=on_full_screen_complete)
             anim.start(self)
 
-
     def _play_started(self, instance, value):
         """
         Override the video player method.Adds Label to the frame stream with the path to the file that is being played.
@@ -315,6 +314,9 @@ class CustomVideoPlayer(VideoPlayer):
         file_path = self.cache_thumbnail(url)
         if os.path.isfile(file_path):
             self.thumbnail = file_path
+            img = CoreImage(file_path)
+            self.aspect_ratio = img.texture.width / float(img.texture.height)
+
         else:
             @mainthread
             def save_to_cache(proxyImage, *args):
