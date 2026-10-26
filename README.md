@@ -1,4 +1,4 @@
-# Custom Video Player
+# KvyMD Video Player
 
 This is a custom video player for Kivy using KivyMD components. The video player features play/pause, stop, volume, and fullscreen control buttons. It also shows the progress of the video, includes a thumbnail display, and caches the thumbnails for performance improvements.
 
