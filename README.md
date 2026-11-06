@@ -1,4 +1,4 @@
-# KvyMD Video Player
+# KivyMD Video Player
 
 This is a custom video player for Kivy using KivyMD components. The video player features play/pause, stop, volume, and fullscreen control buttons. It also shows the progress of the video, includes a thumbnail display, and supports local preview images.
 
@@ -10,8 +10,8 @@ This is a custom video player for Kivy using KivyMD components. The video player
 Clone the repository and navigate to the project directory:
 
 ```bash
-git clone https://github.com/Noor-Kalibbala/CustomVideoPlayer.git
-cd CustomVideoPlayer
+git clone https://github.com/Noor-Kalibbala/KivyMD-VideoPlayer.git
+cd KivyMD-VideoPlayer
 ```
 ## Dependencies
 
