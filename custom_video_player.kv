@@ -5,84 +5,164 @@
     theme_icon_color: "Custom"
     icon_color: "white"
     theme_font_size: "Custom"
-    font_size: sp(16)
+    font_size: sp(20)
 
-# Control buttons container.
+<ProgressBarVideo>:
+    canvas:
+        # Inactive track.
+        Color:
+            rgba: self.track_color
+        Rectangle:
+            pos: self.x, self.center_y - self.bar_height / 2
+            size: self.width, self.bar_height
+        # Hover preview: lighter fill up to the cursor.
+        Color:
+            rgba: 1, 1, 1, (.35 if self.hovered and not self.dragging else 0)
+        Rectangle:
+            pos: self.x, self.center_y - self.bar_height / 2
+            size: self.width * self.hover_value, self.bar_height
+        # Played part.
+        Color:
+            rgba: self.indicator_color
+        Rectangle:
+            pos: self.x, self.center_y - self.bar_height / 2
+            size: self.width * self.value_normalized, self.bar_height
+        # Scrub handle, visible on hover / drag.
+        Color:
+            rgba: self.indicator_color[:3] + [1 if (self.hovered or self.dragging) else 0]
+        Ellipse:
+            pos: self.x + self.width * self.value_normalized - dp(7), self.center_y - dp(7)
+            size: dp(14), dp(14)
+
+    # Time under the cursor.
+    Label:
+        text: root.hover_text
+        font_size: sp(12)
+        size_hint: None, None
+        size: self.texture_size[0] + dp(12), self.texture_size[1] + dp(6)
+        center_x: min(max(root.x + root.width * root.hover_value, root.x + self.width / 2), root.right - self.width / 2)
+        y: root.top + dp(4)
+        opacity: 1 if (root.hovered or root.dragging) and root.hover_text else 0
+        canvas.before:
+            Color:
+                rgba: 0, 0, 0, .8
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(4)]
+
+# Control bar, overlaid on the bottom of the video.
 <PlayerButtonBox>:
-    rows: 1
+    orientation: "vertical"
     adaptive_height: True
-    padding: "6dp"
-    md_bg_color: 0, 0, 0, .95
+    padding: dp(12), dp(32), dp(12), dp(4)
+    spacing: dp(2)
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            texture: self.gradient_texture
 
-    ButtonVideoStop:
-        id: btn_stop
-        video: root.parent
-        icon: "stop"
+    ProgressBarVideo:
+        id: progress_bar
+        video: root.video
+        size_hint_y: None
+        height: dp(20)  # generous hit area; the bar itself is drawn 4-6dp tall
+        indicator_color: app.theme_cls.primaryColor
 
-    ButtonVideoPlayPause:
-        id: btn_play_pause
-        video: root.parent
-        icon: "pause" if root.parent.state == "play" else "play"
+    MDBoxLayout:
+        adaptive_height: True
+        spacing: dp(4)
 
-    MDRelativeLayout:
-        id: progress_container
+        ButtonVideoPlayPause:
+            id: btn_play_pause
+            video: root.video
+            icon: "pause" if root.video and root.video.state == "play" else "play"
 
-        ProgressBarVideo:
-            video: root.parent
-            type: "determinate"
+        ButtonVideoStop:
+            id: btn_stop
+            video: root.video
+            icon: "stop"
+
+        ButtonVideoVolume:
+            id: btn_volume
+            video: root.video
+            icon: "volume-variant-off" if root.video and root.video.volume == 0 else "volume-high"
+
+        MDRelativeLayout:
+            id: volume_container
+            size_hint: None, None
+            size: root.width * .2, dp(40)
+
+            MDSlider:
+                size_hint_y: None
+                height: dp(32)
+                pos_hint: {"center_y": .5}
+                max: 100
+                value: root.video.volume * 100 if root.video else 100
+                on_value: if root.video: root.video.volume = self.value / 100
+                MDSliderHandle:
+
+        MDLabel:
+            id: time
+            text: "0:00"
+            adaptive_width: True
             size_hint_y: None
-            height: "4dp"
-            pos_hint: {"center_y": .5}
-            value: root.parent.position if root.parent else 0
-            max: max(root.parent.duration, root.parent.position, 1)
-            on_value: root.parent.set_time()
+            height: dp(40)
+            padding: dp(8), 0
+            theme_text_color: "Custom"
+            text_color: "white"
+            font_style: "Body"
+            role: "small"
 
-    MDLabel:
-        id: time
-        text: "0:00"
-        adaptive_width: True
-        text_size: None, None
-        theme_text_color: "Custom"
-        text_color: "white"
-        font_style: "Body"
-        role: "small"
-
-    ButtonVideoVolume:
-        id: btn_volume
-        video: root.parent
-        icon: "volume-variant-off" if root.parent.volume == 0 else "volume-high"
-
-    MDRelativeLayout:
-        id: volume_container
-        size_hint_x: None
-        width: root.width * 20/100
-
-        MDSlider:
+        Widget:  # spacer pushing the full-screen button to the right
             size_hint_y: None
-            height: "32dp"
-            pos_hint: {"center_y": .5}
-            max: 100
-            value: root.parent.volume * 100
-            on_value: root.parent.volume = self.value / 100
-            MDSliderHandle:
+            height: dp(1)
+
+        ButtonVideoFullScreen:
+            id: btn_full_screen
+            video: root.video
+            icon: "fullscreen-exit" if self.video and self.video.full_screen else "fullscreen"
 
 
-    ButtonVideoFullScreen:
-        id: btn_full_screen
-        video: root.parent
-        icon: "fullscreen" if self.video.full_screen == False else "fullscreen-exit"
-
-
-# Override the default video player rule.
-<-VideoPlayer>
+# Replaces only CustomVideoPlayer's inherited rule (the old `<-VideoPlayer>`
+# also replaced the rule of every plain Kivy VideoPlayer in the app).
+<-CustomVideoPlayer>:
     container: container
     cols: 1
     allow_fullscreen: False
-    full_screen: False
 
-    PlayerContainer:
-        id: container
-        md_bg_color: "black"
-    PlayerButtonBox:
-        id: button_box
-        video: root
+    MDFloatLayout:
+        id: stage
+
+        PlayerContainer:
+            id: container
+            md_bg_color: "black"
+            pos_hint: {"x": 0, "y": 0}
+
+        # Big play/pause icon in the middle.
+        MDIcon:
+            id: center_icon
+            icon: "play"
+            theme_font_size: "Custom"
+            font_size: sp(44)
+            theme_text_color: "Custom"
+            text_color: "white"
+            size_hint: None, None
+            size: dp(80), dp(80)
+            halign: "center"
+            valign: "center"
+            pos_hint: {"center_x": .5, "center_y": .5}
+            canvas.before:
+                Color:
+                    rgba: 0, 0, 0, .45
+                Ellipse:
+                    pos: self.pos
+                    size: self.size
+
+        PlayerButtonBox:
+            id: button_box
+            video: root
+            pos_hint: {"x": 0, "y": 0}

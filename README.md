@@ -35,13 +35,8 @@ Start the video player with the following command:
 ```bash
 python custom_video_player.py
 ```
-This plays the bundled sample video. Paths are resolved from this file, so the
-launcher also works from another working directory. To play another file:
-
-```bash
-python custom_video_player.py "/absolute/path/to/video.mp4"
-python custom_video_player.py "/absolute/path/to/video.mp4" --thumbnail "/path/to/preview.png"
-```
+This plays the bundled sample video from `video_files/`. Paths are resolved from
+this file, so the launcher also works from another working directory.
 
 On Debian/Ubuntu, PyCairo (a KivyMD 2 dependency) may need build prerequisites:
 
@@ -49,27 +44,73 @@ On Debian/Ubuntu, PyCairo (a KivyMD 2 dependency) may need build prerequisites:
 sudo apt install python3-venv python3-dev libcairo2-dev pkg-config
 ```
 
-Use an `MDApp` when embedding `CustomVideoPlayer`. The updated controls use
-`MDIconButton`, `MDSlider` plus `MDSliderHandle`, and the current label font roles.
-The KV rules are scoped to this player and do not replace global VideoPlayer
-rules. Stop, pause/play, seek, mute/volume, fullscreen/Escape and spacebar are
-supported. Call `unload()` when disposing a player to release the decoder,
-animations and window callbacks. The old unauthenticated URL thumbnail cache is
-no longer used; supply a local thumbnail instead.
+## Usage
+
+Use an `MDApp` when embedding `CustomVideoPlayer`:
+
+```python
+from kivymd.app import MDApp
+from custom_video_player import CustomVideoPlayer
+
+
+class MyApp(MDApp):
+    def build(self):
+        player = CustomVideoPlayer()
+        player.source = "/path/to/video.mp4"
+        player.thumbnail = "/path/to/preview.png"  # optional
+        return player
+```
+
+The KV rule is scoped to `CustomVideoPlayer` (`<-CustomVideoPlayer>`), so plain
+Kivy `VideoPlayer` widgets elsewhere in your app keep their default look.
+Videos are scaled to fit the player while keeping their aspect ratio.
+
+### Controls
+
+| Action | Mouse | Keyboard |
+| --- | --- | --- |
+| Play / pause | Click the video or the play button | `Space` |
+| Seek | Click or drag the progress bar | `←` / `→` (5 s) |
+| Volume | Volume slider, speaker button to mute | `↑` / `↓`, `M` to mute |
+| Full screen | Double-click the video or the full-screen button | `F`, `Esc` to leave |
+| Stop | Stop button | |
+
+Keyboard shortcuts apply to the player the mouse last hovered or clicked (or the
+one in full screen), and are ignored while a text input has focus.
+
+### Touchpads on Linux
+
+Importing `custom_video_player` disables Kivy's `probesysfs` input provider and
+multitouch emulation. Otherwise Kivy treats laptop touchpads as touchscreens, and
+a finger resting on the touchpad sends stray taps that pause the video. The change
+only applies at runtime (your Kivy config file is not modified), and must happen
+before the window is created, so import this module before `kivy.core.window`.
+If you target a Linux device with a real touchscreen, remove those lines.
 
 ## Features
 
-The video player includes the following features:
+- Control bar overlaid on the video with a gradient, fading out after 3 s of
+  mouse inactivity during playback (and as soon as the cursor leaves the window).
+- Large center icon: shown while stopped, briefly flashed on play / pause.
+- Lightweight progress bar: thickens on hover, shows a drag handle, a preview fill
+  and a tooltip with the time under the cursor; click or drag to seek (the seek
+  happens once, on release).
+- `current / total` time label.
+- Full-screen mode, volume control and mute.
+- Keyboard shortcuts.
+- Thumbnail preview before playback, with optional caching of thumbnails
+  (`should_cache = True`) in `~/.cache/<app name>/`.
 
-- Customizable control buttons.
-- Responsive design.
-- Full-screen mode.
-- Volume control.
-- Video progress bar.
-- Keyboard controls.
-- Auto-hide control buttons.
-- Local preview images.
-- Support for keyboard shortcuts.
+### Performance notes
+
+- Mouse-move events only start animations when the controls actually change
+  visibility, and the auto-hide timer is a single reusable `Clock` trigger.
+- The progress bar is drawn with plain rectangles and skips sub-pixel updates;
+  the time label is only re-rendered when the displayed second changes.
+- Because the controls overlay the video, showing / hiding them never re-lays out
+  or rescales the video.
+- Window callbacks (mouse, keyboard, cursor-leave) are bound only while the player
+  is on screen, so removed players don't keep reacting to input.
 
 ## Directory Structure
 
