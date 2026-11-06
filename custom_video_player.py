@@ -7,6 +7,7 @@ from kivy.config import Config
 # Must run before kivy.core.window is imported (the window reads it on creation).
 # On Linux, Kivy's "probesysfs" provider treats laptop touchpads as touchscreens,
 # so resting a finger on the touchpad sends stray taps that play/pause the video.
+
 if Config.has_option("input", "%(name)s"):
     Config.remove_option("input", "%(name)s")
 # Plain mouse input; also stops right-click from drawing multitouch red dots.
