@@ -79,7 +79,7 @@
         ButtonVideoPlayPause:
             id: btn_play_pause
             video: root.video
-            icon: "pause" if root.video and root.video.state == "play" else "play"
+            icon: "play"  # kept in sync from PlayerButtonBox._sync_with_video
 
         ButtonVideoStop:
             id: btn_stop
@@ -89,7 +89,7 @@
         ButtonVideoVolume:
             id: btn_volume
             video: root.video
-            icon: "volume-variant-off" if root.video and root.video.volume == 0 else "volume-high"
+            icon: "volume-high"
 
         MDRelativeLayout:
             id: volume_container
@@ -97,11 +97,12 @@
             size: root.width * .2, dp(40)
 
             MDSlider:
+                id: volume_slider
                 size_hint_y: None
                 height: dp(32)
                 pos_hint: {"center_y": .5}
                 max: 100
-                value: root.video.volume * 100 if root.video else 100
+                value: 100
                 on_value: if root.video: root.video.volume = self.value / 100
                 MDSliderHandle:
 
@@ -124,7 +125,7 @@
         ButtonVideoFullScreen:
             id: btn_full_screen
             video: root.video
-            icon: "fullscreen-exit" if self.video and self.video.full_screen else "fullscreen"
+            icon: "fullscreen"
 
 
 # Replaces only CustomVideoPlayer's inherited rule (the old `<-VideoPlayer>`

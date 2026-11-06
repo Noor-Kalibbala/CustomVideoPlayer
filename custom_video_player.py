@@ -95,6 +95,23 @@ class PlayerButtonBox(MDBoxLayout):
         super().__init__(**kwargs)
         self.gradient_texture = get_gradient_texture()
 
+    def on_video(self, instance, video):
+        # KV expressions like `root.video.state` don't update reliably here
+        # (`video` holds a weak proxy of the player), so sync in Python.
+        if video is None:
+            return
+        for prop in ("state", "volume", "full_screen"):
+            video.fbind(prop, self._sync_with_video)
+        self._sync_with_video()
+
+    def _sync_with_video(self, *args):
+        video, ids = self.video, self.ids
+        ids.btn_play_pause.icon = "pause" if video.state == "play" else "play"
+        ids.btn_volume.icon = "volume-variant-off" if video.volume == 0 else "volume-high"
+        ids.btn_full_screen.icon = "fullscreen-exit" if video.full_screen else "fullscreen"
+        if round(ids.volume_slider.value) != round(video.volume * 100):
+            ids.volume_slider.value = video.volume * 100
+
 
 # ****************************** Progress bar ********************************
 class ProgressBarVideo(Widget):
